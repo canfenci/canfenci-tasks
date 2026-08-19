@@ -1,6 +1,6 @@
 # Canfenci Tasks
 
-Gorev, proje ve fikir yonetimi icin mobil oncelikli, offline calisan bir PWA.
+Görev, proje ve fikir yönetimi için mobil öncelikli, offline çalışan bir PWA.
 
 ## Kurulum
 
@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Tarayicida `http://localhost:5173` adresini acin.
+Tarayıcıda `http://localhost:5173` adresini açın.
 
 ## Build (Production)
 
@@ -18,32 +18,39 @@ npm run build
 npm run preview
 ```
 
-## Ozellikler
+## Özellikler
 
-- Gorev / Proje / Fikir yonetimi
-- IndexedDB tabanli offline-first veri katmani
-- Yuklenebilir PWA (Ana ekrana ekle)
-- Acik / Koyu / Sistem temasi
-- Mobil oncelikli, tablet ve masaustu responsive tasarim
+- Görev / Proje / Fikir yönetimi
+- IndexedDB tabanlı offline-first veri katmanı
+- Yüklenebilir PWA (Ana ekrana ekle)
+- Açık / Koyu / Sistem teması
+- Mobil öncelikli, tablet ve masaüstü responsive tasarım
+- Arama, filtreleme ve sıralama
+- Alt görevler (checklist)
+- Tekrarlayan görevler
+- Bildirim/hatırlatıcı
+- Sürükle-bırak sıralama
+- JSON Export/Import
+- İstatistik paneli
 
-## Klasor Yapisi
+## Klasör Yapısı
 
 ```
 src/
-  components/   -> Layout, ortak ve ayar bilesenleri
+  components/   -> Layout, ortak ve ayar bileşenleri
   context/      -> Navigation, DataRefresh, Theme, UI context'leri
-  pages/        -> Bugun, Gorevler, Projeler, Fikirler sayfalari
-  pwa/          -> Service worker kayit katmani
+  pages/        -> Bugün, Görevler, Projeler, Fikirler sayfaları
+  pwa/          -> Service worker kayıt katmanı
   services/db/  -> IndexedDB servisleri (task, project, idea)
-  services/seed/-> Ilk acilista ornek veri
-  styles/       -> CSS degiskenleri ve tema stilleri
+  services/seed/-> İlk açılışta örnek veri
+  styles/       -> CSS değişkenleri ve tema stilleri
   types/        -> Veri modelleri
-  config/       -> Uygulama genel ayarlari
+  config/       -> Uygulama genel ayarları
 public/
-  icons/        -> PWA ikonlari (gercek png'lerle degistirilmeli)
+  icons/        -> PWA ikonları (gerçek png'lerle değiştirilmeli)
 ```
 
 ## Not
 
-`public/icons/` altindaki ikonlar placeholder SVG'dir. Gercek 192x192 / 512x512
-PNG ikonlarla degistirmeniz onerilir (orn. https://realfavicongenerator.net).
+`public/icons/` altındaki ikonlar placeholder SVG'dir. Gerçek 192x192 / 512x512
+PNG ikonlarla değiştirmeniz önerilir (örn. https://realfavicongenerator.net).

@@ -1,11 +1,12 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Lightbulb, Trash2, Edit2, X, MoreVertical, CheckSquare, FolderKanban } from 'lucide-react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { Lightbulb, Trash2, Edit2, X, MoreVertical, CheckSquare, FolderKanban, Plus } from 'lucide-react';
 import { ideaService } from '../services/db/ideaService';
 import { taskService } from '../services/db/taskService';
 import { projectService } from '../services/db/projectService';
 import { useDataRefresh } from '../context/DataRefreshContext';
 import { useToast } from '../context/ToastContext';
 import type { Idea } from '../types/models';
+import { SearchBar } from '../components/common/SearchBar';
 
 interface IdeaFormData {
   title: string;
@@ -28,9 +29,52 @@ export function IdeasPage() {
   const [formData, setFormData] = useState<IdeaFormData>({ title: '', notes: '', tags: '' });
   const [swipeState, setSwipeState] = useState<SwipeState>({ ideaId: null, offsetX: 0, isOpen: false });
 
+  // Search, Filter, Sort state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<string>('');
+
+  const sortOptions = [
+    { value: 'title-asc', label: 'A-Z' },
+    { value: 'title-desc', label: 'Z-A' },
+    { value: 'date-desc', label: 'Oluşturulma (Yeni → Eski)' },
+    { value: 'date-asc', label: 'Oluşturulma (Eski → Yeni)' },
+  ];
+
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
+
+  const handleSortChange = useCallback((sort: string) => {
+    setSortBy(sort);
+  }, []);
+
   useEffect(() => {
     ideaService.getAll().then(setIdeas);
   }, [refreshKey]);
+
+  const filteredIdeas = useMemo(() => {
+    return ideas.filter((i) => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return i.title.toLowerCase().includes(q) || 
+             i.notes?.toLowerCase().includes(q) ||
+             i.tags?.some(tag => tag.toLowerCase().includes(q));
+    }).sort((a, b) => {
+      if (!sortBy) return 0;
+      switch (sortBy) {
+        case 'title-asc':
+          return a.title.localeCompare(b.title);
+        case 'title-desc':
+          return b.title.localeCompare(a.title);
+        case 'date-desc':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'date-asc':
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        default:
+          return 0;
+      }
+    });
+  }, [ideas, searchQuery, sortBy]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -165,170 +209,218 @@ export function IdeasPage() {
   }
 
   return (
-    <div>
-      {ideas.map((idea) => {
-        const swipe = swipeState.ideaId === idea.id ? swipeState : { offsetX: 0, isOpen: false };
+    <>
+      <header style={{ 
+        position: 'sticky', 
+        top: 0, 
+        zIndex: 20, 
+        height: 'var(--topbar-height)', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        padding: '0 var(--space-4)', 
+        background: 'var(--color-bg-elevated)', 
+        borderBottom: '1px solid var(--color-border)' 
+      }}>
+        <div className="top-bar-title">Fikirler</div>
+        <button 
+          onClick={() => { setFormData({ title: '', notes: '', tags: '' }); setEditingIdea(null); }}
+          aria-label="Yeni fikir"
+          style={{ 
+            width: '32px', 
+            height: '32px', 
+            borderRadius: '8px', 
+            background: 'var(--color-primary)', 
+            color: '#fff', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          <Plus size={20} />
+        </button>
+      </header>
 
-        return (
-          <div
-            key={idea.id}
-            className="card"
-            style={{ 
-              flexDirection: 'column', 
-              alignItems: 'stretch',
-              transform: swipe.isOpen ? 'translateX(-100px)' : `translateX(${swipe.offsetX}px)`,
-              transition: 'transform 0.2s ease',
-              position: 'relative',
-              overflow: 'hidden',
-            }}
-            onTouchStart={(e) => handleTouchStart(e, idea.id)}
-            onTouchMove={(e) => handleTouchMove(e, idea.id)}
-            onTouchEnd={(e) => handleTouchEnd(e, idea.id)}
-          >
-            <div className="swipe-delete" style={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: '100px',
-              background: 'var(--color-danger)',
-              color: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 600,
-              opacity: swipe.isOpen ? 1 : Math.abs(swipe.offsetX) / 100,
-              pointerEvents: 'none',
-            }}>
-              <Trash2 size={24} /> Sil
-            </div>
+      <SearchBar
+        onSearch={handleSearch}
+        onSortChange={handleSortChange}
+        sorts={[
+          { value: 'title-asc', label: 'A-Z' },
+          { value: 'title-desc', label: 'Z-A' },
+          { value: 'date-desc', label: 'Oluşturulma (Yeni → Eski)' },
+          { value: 'date-asc', label: 'Oluşturulma (Eski → Yeni)' },
+        ]}
+        currentSort={sortBy}
+        placeholder="Fikir ara..."
+      />
 
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'flex-start',
-              position: 'relative',
-              zIndex: 1,
-            }}>
-              <div className="card-title">{idea.title}</div>
-              <button
-                onClick={(e) => handleContextMenu(e, idea.id)}
-                className="top-bar-icon-btn"
-                aria-label="Daha fazla seçenek"
-                style={{ padding: 4, flexShrink: 0 }}
-              >
-                <MoreVertical size={20} />
-              </button>
-            </div>
-            {idea.notes && <div className="card-meta">{idea.notes}</div>}
-            {idea.tags && idea.tags.length > 0 && (
-              <div className="card-meta" style={{ marginTop: 6 }}>
-                {idea.tags.map((tag) => (
-                  <span key={tag} className="badge badge-neutral">
-                    #{tag}
-                  </span>
-                ))}
+      <div>
+        {filteredIdeas.map((idea) => {
+          const swipe = swipeState.ideaId === idea.id ? swipeState : { offsetX: 0, isOpen: false };
+
+          return (
+            <div
+              key={idea.id}
+              className="card"
+              style={{ 
+                flexDirection: 'column', 
+                alignItems: 'stretch',
+                transform: swipe.isOpen ? 'translateX(-100px)' : `translateX(${swipe.offsetX}px)`,
+                transition: 'transform 0.2s ease',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+              onTouchStart={(e) => handleTouchStart(e, idea.id)}
+              onTouchMove={(e) => handleTouchMove(e, idea.id)}
+              onTouchEnd={(e) => handleTouchEnd(e, idea.id)}
+            >
+              <div className="swipe-delete" style={{
+                position: 'absolute',
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: '100px',
+                background: 'var(--color-danger)',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 600,
+                opacity: swipe.isOpen ? 1 : Math.abs(swipe.offsetX) / 100,
+                pointerEvents: 'none',
+              }}>
+                <Trash2 size={24} /> Sil
               </div>
-            )}
 
-            {contextMenu?.ideaId === idea.id && (
-              <div 
-                className="context-menu"
-                style={{
-                  position: 'fixed',
-                  left: contextMenu.x,
-                  top: contextMenu.y,
-                  zIndex: 1000,
-                  background: 'var(--color-bg-elevated)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 'var(--radius-md)',
-                  boxShadow: 'var(--shadow-lg)',
-                  minWidth: 180,
-                  padding: 'var(--space-1)',
-                }}
-              >
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'flex-start',
+                position: 'relative',
+                zIndex: 1,
+              }}>
+                <div className="card-title">{idea.title}</div>
                 <button
-                  onClick={() => handleConvertToTask(idea)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--space-2)',
-                    padding: 'var(--space-2) var(--space-3)',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--color-text-primary)',
-                    fontSize: 'var(--font-size-sm)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                  }}
+                  onClick={(e) => handleContextMenu(e, idea.id)}
+                  className="top-bar-icon-btn"
+                  aria-label="Daha fazla seçenek"
+                  style={{ padding: 4, flexShrink: 0 }}
                 >
-                  <CheckSquare size={16} /> Göreve Dönüştür
-                </button>
-                <button
-                  onClick={() => handleConvertToProject(idea)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--space-2)',
-                    padding: 'var(--space-2) var(--space-3)',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--color-text-primary)',
-                    fontSize: 'var(--font-size-sm)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                  }}
-                >
-                  <FolderKanban size={16} /> Projeye Dönüştür
-                </button>
-                <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', margin: 'var(--space-1) 0' }} />
-                <button
-                  onClick={() => handleEdit(idea)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--space-2)',
-                    padding: 'var(--space-2) var(--space-3)',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--color-text-primary)',
-                    fontSize: 'var(--font-size-sm)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                  }}
-                >
-                  <Edit2 size={16} /> Düzenle
-                </button>
-                <button
-                  onClick={() => handleDelete(idea.id)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--space-2)',
-                    padding: 'var(--space-2) var(--space-3)',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--color-danger)',
-                    fontSize: 'var(--font-size-sm)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                  }}
-                >
-                  <Trash2 size={16} /> Sil
+                  <MoreVertical size={20} />
                 </button>
               </div>
-            )}
-          </div>
-        );
-      })}
+              {idea.notes && <div className="card-meta">{idea.notes}</div>}
+              {idea.tags && idea.tags.length > 0 && (
+                <div className="card-meta" style={{ marginTop: 6 }}>
+                  {idea.tags.map((tag) => (
+                    <span key={tag} className="badge badge-neutral">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {contextMenu?.ideaId === idea.id && (
+                <div 
+                  className="context-menu"
+                  style={{
+                    position: 'fixed',
+                    left: contextMenu.x,
+                    top: contextMenu.y,
+                    zIndex: 1000,
+                    background: 'var(--color-bg-elevated)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-md)',
+                    boxShadow: 'var(--shadow-lg)',
+                    minWidth: 180,
+                    padding: 'var(--space-1)',
+                  }}
+                >
+                  <button
+                    onClick={() => handleConvertToTask(idea)}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--space-2)',
+                      padding: 'var(--space-2) var(--space-3)',
+                      borderRadius: 'var(--radius-sm)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-text-primary)',
+                      fontSize: 'var(--font-size-sm)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <CheckSquare size={16} /> Göreve Dönüştür
+                  </button>
+                  <button
+                    onClick={() => handleConvertToProject(idea)}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--space-2)',
+                      padding: 'var(--space-2) var(--space-3)',
+                      borderRadius: 'var(--radius-sm)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-text-primary)',
+                      fontSize: 'var(--font-size-sm)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <FolderKanban size={16} /> Projeye Dönüştür
+                  </button>
+                  <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', margin: 'var(--space-1) 0' }} />
+                  <button
+                    onClick={() => handleEdit(idea)}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--space-2)',
+                      padding: 'var(--space-2) var(--space-3)',
+                      borderRadius: 'var(--radius-sm)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-text-primary)',
+                      fontSize: 'var(--font-size-sm)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <Edit2 size={16} /> Düzenle
+                  </button>
+                  <button
+                    onClick={() => handleDelete(idea.id)}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--space-2)',
+                      padding: 'var(--space-2) var(--space-3)',
+                      borderRadius: 'var(--radius-sm)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-danger)',
+                      fontSize: 'var(--font-size-sm)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <Trash2 size={16} /> Sil
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
       {editingIdea && (
         <div className="modal-overlay" onClick={handleCancel}>
@@ -381,6 +473,6 @@ export function IdeasPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

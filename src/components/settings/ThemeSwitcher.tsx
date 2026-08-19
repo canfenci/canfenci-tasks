@@ -6,13 +6,13 @@ export function ThemeSwitcher() {
   const { mode, setMode } = useTheme();
 
   const options: { value: 'light' | 'dark' | 'system'; icon: React.ReactNode; label: string }[] = [
-    { value: 'light', icon: <Sun size={16} />, label: 'Acik' },
+    { value: 'light', icon: <Sun size={16} />, label: 'Açık' },
     { value: 'dark', icon: <Moon size={16} />, label: 'Koyu' },
     { value: 'system', icon: <Monitor size={16} />, label: 'Sistem' },
   ];
 
   return (
-    <div className="theme-switcher" role="radiogroup" aria-label="Tema secimi">
+    <div className="theme-switcher" role="radiogroup" aria-label="Tema seçimi">
       {options.map((opt) => (
         <button
           key={opt.value}

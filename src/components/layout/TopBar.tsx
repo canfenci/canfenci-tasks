@@ -10,8 +10,8 @@ import { useToast } from '../../context/ToastContext';
 import { exportData, downloadBackup, importData, readFileAsText } from '../../services/exportImportService';
 
 const PAGE_TITLES: Record<string, string> = {
-  today: 'Bugun',
-  tasks: 'Gorevler',
+  today: 'Bugün',
+  tasks: 'Görevler',
   projects: 'Projeler',
   ideas: 'Fikirler',
 };

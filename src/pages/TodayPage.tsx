@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Calendar, Edit2, MoreVertical, Trash2 } from 'lucide-react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { Calendar, Edit2, MoreVertical, Trash2, CheckCircle, AlertCircle, Clock, TrendingUp } from 'lucide-react';
 import { taskService } from '../services/db/taskService';
 import { projectService } from '../services/db/projectService';
 import { useDataRefresh } from '../context/DataRefreshContext';
@@ -58,6 +58,24 @@ export function TodayPage() {
 
   const relevantTasks = tasks.filter(
     (t) => !t.completed && (isToday(t.dueDate) || isOverdue(t.dueDate))
+  );
+
+  // İstatistik hesaplamaları
+  const todayTotal = useMemo(() => 
+    tasks.filter(t => isToday(t.dueDate)).length, 
+    [tasks]
+  );
+  const todayCompleted = useMemo(() => 
+    tasks.filter(t => t.completed && isToday(t.dueDate)).length, 
+    [tasks]
+  );
+  const overdue = useMemo(() => 
+    tasks.filter(t => !t.completed && isOverdue(t.dueDate)).length, 
+    [tasks]
+  );
+  const completionRate = useMemo(() => 
+    todayTotal > 0 ? Math.round((todayCompleted / todayTotal) * 100) : 0, 
+    [todayTotal, todayCompleted]
   );
 
   const handleToggle = async (id: string) => {
@@ -177,6 +195,144 @@ export function TodayPage() {
 
   return (
     <div>
+      {/* İstatistik Dashboard Kartı */}
+      <div style={{ 
+        display: 'flex', 
+        gap: 'var(--space-3)', 
+        padding: 'var(--space-3) var(--space-4)',
+        overflowX: 'auto',
+        marginBottom: 'var(--space-3)',
+      }}>
+        <div style={{ 
+          flex: 1, 
+          minWidth: '140px',
+          background: 'var(--color-bg-elevated)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-md)',
+          padding: 'var(--space-3)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 'var(--space-1)',
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            width: '40px', 
+            height: '40px', 
+            borderRadius: 'var(--radius-full)',
+            background: 'var(--color-primary-light)',
+            color: 'var(--color-primary)',
+            marginBottom: 'var(--space-1)',
+          }}>
+            <CheckCircle size={20} />
+          </div>
+          <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+            {todayTotal}
+          </div>
+          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>
+            Bugün
+          </div>
+        </div>
+        <div style={{ 
+          flex: 1, 
+          minWidth: '140px',
+          background: 'var(--color-bg-elevated)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-md)',
+          padding: 'var(--space-3)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 'var(--space-1)',
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            width: '40px', 
+            height: '40px', 
+            borderRadius: 'var(--radius-full)',
+            background: 'var(--color-success-light)',
+            color: 'var(--color-success)',
+            marginBottom: 'var(--space-1)',
+          }}>
+            <CheckCircle size={20} />
+          </div>
+          <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--color-success)' }}>
+            {todayCompleted}
+          </div>
+          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>
+            Tamamlandı
+          </div>
+        </div>
+        <div style={{ 
+          flex: 1, 
+          minWidth: '140px',
+          background: 'var(--color-bg-elevated)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-md)',
+          padding: 'var(--space-3)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 'var(--space-1)',
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            width: '40px', 
+            height: '40px', 
+            borderRadius: 'var(--radius-full)',
+            background: 'var(--color-danger-light)',
+            color: 'var(--color-danger)',
+            marginBottom: 'var(--space-1)',
+          }}>
+            <AlertCircle size={20} />
+          </div>
+          <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--color-danger)' }}>
+            {overdue}
+          </div>
+          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>
+            Gecikmiş
+          </div>
+        </div>
+        <div style={{ 
+          flex: 1, 
+          minWidth: '140px',
+          background: 'var(--color-bg-elevated)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-md)',
+          padding: 'var(--space-3)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 'var(--space-1)',
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            width: '40px', 
+            height: '40px', 
+            borderRadius: 'var(--radius-full)',
+            background: 'var(--color-info-light)',
+            color: 'var(--color-info)',
+            marginBottom: 'var(--space-1)',
+          }}>
+            <TrendingUp size={20} />
+          </div>
+          <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--color-info)' }}>
+            {completionRate}%
+          </div>
+          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>
+            Tamamlanma
+          </div>
+        </div>
+      </div>
+
       {relevantTasks.map((task) => {
         const relativeDate = task.dueDate ? getRelativeDateLabel(task.dueDate) : null;
         const swipe = swipeState.taskId === task.id ? swipeState : { offsetX: 0, isOpen: false };
