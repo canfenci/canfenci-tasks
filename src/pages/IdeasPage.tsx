@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Lightbulb, Trash2, Edit2, X } from 'lucide-react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Lightbulb, Trash2, Edit2, X, MoreVertical, CheckSquare, FolderKanban } from 'lucide-react';
 import { ideaService } from '../services/db/ideaService';
+import { taskService } from '../services/db/taskService';
+import { projectService } from '../services/db/projectService';
 import { useDataRefresh } from '../context/DataRefreshContext';
+import { useToast } from '../context/ToastContext';
 import type { Idea } from '../types/models';
 
 interface IdeaFormData {
@@ -10,15 +13,34 @@ interface IdeaFormData {
   tags: string;
 }
 
+interface SwipeState {
+  ideaId: string | null;
+  offsetX: number;
+  isOpen: boolean;
+}
+
 export function IdeasPage() {
   const { refreshKey, triggerRefresh } = useDataRefresh();
+  const { showToast, hideToast } = useToast();
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [editingIdea, setEditingIdea] = useState<Idea | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ ideaId: string; x: number; y: number } | null>(null);
   const [formData, setFormData] = useState<IdeaFormData>({ title: '', notes: '', tags: '' });
+  const [swipeState, setSwipeState] = useState<SwipeState>({ ideaId: null, offsetX: 0, isOpen: false });
 
   useEffect(() => {
     ideaService.getAll().then(setIdeas);
   }, [refreshKey]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (contextMenu && !e.composedPath().some(el => (el as HTMLElement).classList?.contains?.('context-menu'))) {
+        setContextMenu(null);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [contextMenu]);
 
   const handleEdit = (idea: Idea) => {
     setFormData({
@@ -27,15 +49,90 @@ export function IdeasPage() {
       tags: idea.tags?.join(', ') || '',
     });
     setEditingIdea(idea);
+    setContextMenu(null);
   };
 
-  const handleDelete = async (e: React.MouseEvent, idea: Idea) => {
-    e.stopPropagation();
-    if (window.confirm(`"${idea.title}" fikrini silmek istediğinizden emin misiniz?`)) {
-      await ideaService.remove(idea.id);
-      triggerRefresh();
-    }
+  const handleDelete = async (ideaId: string) => {
+    const idea = ideas.find(i => i.id === ideaId);
+    if (!idea) return;
+
+    await ideaService.remove(ideaId);
+    triggerRefresh();
+
+    const toastId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    showToast(
+      `"${idea.title}" silindi`,
+      'warning',
+      {
+        label: 'Geri Al',
+        onClick: async () => {
+          await ideaService.create({
+            title: idea.title,
+            notes: idea.notes,
+            tags: idea.tags,
+          });
+          triggerRefresh();
+          hideToast(toastId);
+        }
+      }
+    );
+    setContextMenu(null);
   };
+
+  const handleConvertToTask = async (idea: Idea) => {
+    const tags = idea.tags || [];
+    const allTasks = await taskService.getAll();
+    const maxOrder = allTasks.length > 0 ? Math.max(...allTasks.map(t => t.order || 0)) : 0;
+    await taskService.create({
+      title: idea.title,
+      notes: idea.notes,
+      tags,
+      priority: 'medium',
+      order: maxOrder + 1,
+    });
+    triggerRefresh();
+    showToast('Fikir görev olarak oluşturuldu', 'success');
+    setContextMenu(null);
+  };
+
+  const handleConvertToProject = async (idea: Idea) => {
+    await projectService.create({
+      name: idea.title,
+      description: idea.notes,
+      color: '#4f46e5',
+    });
+    triggerRefresh();
+    showToast('Fikir proje olarak oluşturuldu', 'success');
+    setContextMenu(null);
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, ideaId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    setContextMenu({ ideaId, x: rect.left, y: rect.bottom });
+  };
+
+  const handleTouchStart = useCallback((_e: React.TouchEvent, ideaId: string) => {
+    setSwipeState({ ideaId, offsetX: 0, isOpen: false });
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent, ideaId: string) => {
+    const target = e.touches[0].target as HTMLElement;
+    const deltaX = e.touches[0].clientX - target.getBoundingClientRect().left;
+    if (deltaX < 0 && Math.abs(deltaX) > 10) {
+      e.preventDefault();
+      setSwipeState(prev => prev.ideaId === ideaId ? { ...prev, offsetX: Math.max(deltaX, -100), isOpen: Math.abs(deltaX) > 60 } : prev);
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback((_e: React.TouchEvent, ideaId: string) => {
+    if (swipeState.ideaId === ideaId && swipeState.isOpen) {
+      handleDelete(ideaId);
+    }
+    setSwipeState({ ideaId: null, offsetX: 0, isOpen: false });
+  }, [swipeState, handleDelete]);
 
   const handleSubmit = async () => {
     if (!formData.title.trim() || !editingIdea) return;
@@ -61,62 +158,190 @@ export function IdeasPage() {
     return (
       <div className="empty-state">
         <Lightbulb size={48} className="empty-state-icon" />
-        <div className="empty-state-title">Henuz fikir yok</div>
-        <div className="empty-state-subtitle">Aklinizdaki fikirleri buraya kaydedin</div>
+        <div className="empty-state-title">Henüz fikir yok</div>
+        <div className="empty-state-subtitle">Aklınızdaki fikirleri buraya kaydedin</div>
       </div>
     );
   }
 
   return (
     <div>
-      {ideas.map((idea) => (
-        <div key={idea.id} className="card" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div className="card-title">{idea.title}</div>
-            <div style={{ display: 'flex', gap: 4 }}>
+      {ideas.map((idea) => {
+        const swipe = swipeState.ideaId === idea.id ? swipeState : { offsetX: 0, isOpen: false };
+
+        return (
+          <div
+            key={idea.id}
+            className="card"
+            style={{ 
+              flexDirection: 'column', 
+              alignItems: 'stretch',
+              transform: swipe.isOpen ? 'translateX(-100px)' : `translateX(${swipe.offsetX}px)`,
+              transition: 'transform 0.2s ease',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+            onTouchStart={(e) => handleTouchStart(e, idea.id)}
+            onTouchMove={(e) => handleTouchMove(e, idea.id)}
+            onTouchEnd={(e) => handleTouchEnd(e, idea.id)}
+          >
+            <div className="swipe-delete" style={{
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: '100px',
+              background: 'var(--color-danger)',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 600,
+              opacity: swipe.isOpen ? 1 : Math.abs(swipe.offsetX) / 100,
+              pointerEvents: 'none',
+            }}>
+              <Trash2 size={24} /> Sil
+            </div>
+
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'flex-start',
+              position: 'relative',
+              zIndex: 1,
+            }}>
+              <div className="card-title">{idea.title}</div>
               <button
-                onClick={() => handleEdit(idea)}
+                onClick={(e) => handleContextMenu(e, idea.id)}
                 className="top-bar-icon-btn"
-                aria-label="Fikri duzenle"
-                style={{ padding: 4 }}
+                aria-label="Daha fazla seçenek"
+                style={{ padding: 4, flexShrink: 0 }}
               >
-                <Edit2 size={16} />
-              </button>
-              <button
-                onClick={(e) => handleDelete(e, idea)}
-                className="top-bar-icon-btn"
-                aria-label="Fikri sil"
-                style={{ padding: 4 }}
-              >
-                <Trash2 size={16} />
+                <MoreVertical size={20} />
               </button>
             </div>
+            {idea.notes && <div className="card-meta">{idea.notes}</div>}
+            {idea.tags && idea.tags.length > 0 && (
+              <div className="card-meta" style={{ marginTop: 6 }}>
+                {idea.tags.map((tag) => (
+                  <span key={tag} className="badge badge-neutral">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {contextMenu?.ideaId === idea.id && (
+              <div 
+                className="context-menu"
+                style={{
+                  position: 'fixed',
+                  left: contextMenu.x,
+                  top: contextMenu.y,
+                  zIndex: 1000,
+                  background: 'var(--color-bg-elevated)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-md)',
+                  boxShadow: 'var(--shadow-lg)',
+                  minWidth: 180,
+                  padding: 'var(--space-1)',
+                }}
+              >
+                <button
+                  onClick={() => handleConvertToTask(idea)}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-2)',
+                    padding: 'var(--space-2) var(--space-3)',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--color-text-primary)',
+                    fontSize: 'var(--font-size-sm)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <CheckSquare size={16} /> Göreve Dönüştür
+                </button>
+                <button
+                  onClick={() => handleConvertToProject(idea)}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-2)',
+                    padding: 'var(--space-2) var(--space-3)',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--color-text-primary)',
+                    fontSize: 'var(--font-size-sm)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <FolderKanban size={16} /> Projeye Dönüştür
+                </button>
+                <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', margin: 'var(--space-1) 0' }} />
+                <button
+                  onClick={() => handleEdit(idea)}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-2)',
+                    padding: 'var(--space-2) var(--space-3)',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--color-text-primary)',
+                    fontSize: 'var(--font-size-sm)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <Edit2 size={16} /> Düzenle
+                </button>
+                <button
+                  onClick={() => handleDelete(idea.id)}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-2)',
+                    padding: 'var(--space-2) var(--space-3)',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--color-danger)',
+                    fontSize: 'var(--font-size-sm)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <Trash2 size={16} /> Sil
+                </button>
+              </div>
+            )}
           </div>
-          {idea.notes && <div className="card-meta">{idea.notes}</div>}
-          {idea.tags && idea.tags.length > 0 && (
-            <div className="card-meta" style={{ marginTop: 6 }}>
-              {idea.tags.map((tag) => (
-                <span key={tag} className="badge badge-neutral">
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
+        );
+      })}
 
       {editingIdea && (
         <div className="modal-overlay" onClick={handleCancel}>
           <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <div className="top-bar-title">Fikri Duzenle</div>
+              <div className="top-bar-title">Fikri Düzenle</div>
               <button onClick={handleCancel} aria-label="Kapat" className="top-bar-icon-btn">
                 <X size={20} />
               </button>
             </div>
 
             <div className="form-group">
-              <label className="form-label">Baslik</label>
+              <label className="form-label">Başlık</label>
               <input
                 className="form-input"
                 autoFocus
@@ -136,10 +361,10 @@ export function IdeasPage() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Etiketler (virgulle ayrilmis)</label>
+              <label className="form-label">Etiketler (virgülle ayrılmış)</label>
               <input
                 className="form-input"
-                placeholder="orn: pwa, ipucu, proje"
+                placeholder="örn: pwa, ipucu, proje"
                 value={formData.tags}
                 onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
               />
@@ -147,7 +372,7 @@ export function IdeasPage() {
 
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="btn btn-secondary" style={{ flex: 1 }} onClick={handleCancel}>
-                Iptal
+                İptal
               </button>
               <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSubmit}>
                 Kaydet

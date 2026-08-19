@@ -35,12 +35,14 @@ export async function seedInitialData(): Promise<void> {
       title: 'Canfenci Tasks uygulamasina hos geldiniz!',
       priority: 'medium',
       projectId: project.id,
+      order: 0,
     });
 
     await taskService.create({
       title: 'Bir gorev olusturmayi deneyin (+ butonuna dokunun)',
       priority: 'low',
       projectId: project.id,
+      order: 1,
     });
 
     await ideaService.create({

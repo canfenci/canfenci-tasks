@@ -4,11 +4,15 @@ interface Toast {
   id: string;
   message: string;
   type: 'success' | 'error' | 'warning' | 'info';
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 interface ToastContextValue {
   toasts: Toast[];
-  showToast: (message: string, type: Toast['type']) => void;
+  showToast: (message: string, type: Toast['type'], action?: Toast['action']) => void;
   hideToast: (id: string) => void;
 }
 
@@ -17,12 +21,14 @@ const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = useCallback((message: string, type: Toast['type']) => {
+  const showToast = useCallback((message: string, type: Toast['type'], action?: Toast['action']) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
+    setToasts((prev) => [...prev, { id, message, type, action }]);
+    if (!action) {
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 4000);
+    }
   }, []);
 
   const hideToast = useCallback((id: string) => {
@@ -94,19 +100,40 @@ function ToastContainer({ toasts, onHide }: { toasts: Toast[]; onHide: (id: stri
         >
           <span style={{ fontWeight: 'bold' }}>{typeIcons[toast.type]}</span>
           <span style={{ flex: 1 }}>{toast.message}</span>
-          <button
-            onClick={() => onHide(toast.id)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--color-text-tertiary)',
-              cursor: 'pointer',
-              padding: 'var(--space-1)',
-            }}
-            aria-label="Kapat"
-          >
-            ✕
-          </button>
+          {toast.action ? (
+            <button
+              onClick={() => {
+                toast.action?.onClick();
+                onHide(toast.id);
+              }}
+              style={{
+                background: 'var(--color-primary)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 'var(--radius-sm)',
+                padding: 'var(--space-1) var(--space-3)',
+                fontSize: 'var(--font-size-sm)',
+                fontWeight: 500,
+                cursor: 'pointer',
+              }}
+            >
+              {toast.action.label}
+            </button>
+          ) : (
+            <button
+              onClick={() => onHide(toast.id)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--color-text-tertiary)',
+                cursor: 'pointer',
+                padding: 'var(--space-1)',
+              }}
+              aria-label="Kapat"
+            >
+              ✕
+            </button>
+          )}
         </div>
       ))}
     </div>

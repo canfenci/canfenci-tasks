@@ -6,7 +6,11 @@ import { taskService } from '../../services/db/taskService';
 import { projectService } from '../../services/db/projectService';
 import { ideaService } from '../../services/db/ideaService';
 import type { Task, Project, Idea } from '../../types/models';
-import { formatDate } from '../../utils/dateUtils';
+import { getRelativeDateLabel } from '../../utils/dateUtils';
+
+function matchesQuery(text: string | undefined, query: string): boolean {
+  return text?.toLowerCase().includes(query.toLowerCase()) ?? false;
+}
 
 export function SearchOverlay() {
   const { isSearchOpen, closeSearch } = useUI();
@@ -40,9 +44,20 @@ export function SearchOverlay() {
         ideaService.getAll(),
       ]);
       const q = query.toLowerCase();
-      setTaskResults(tasks.filter((t) => t.title.toLowerCase().includes(q)).slice(0, 5));
-      setProjectResults(projects.filter((p) => p.name.toLowerCase().includes(q)).slice(0, 5));
-      setIdeaResults(ideas.filter((i) => i.title.toLowerCase().includes(q)).slice(0, 5));
+      setTaskResults(tasks.filter((t) => 
+        matchesQuery(t.title, q) || 
+        matchesQuery(t.notes, q) || 
+        t.tags?.some(tag => tag.toLowerCase().includes(q))
+      ).slice(0, 5));
+      setProjectResults(projects.filter((p) => 
+        matchesQuery(p.name, q) || 
+        matchesQuery(p.description, q)
+      ).slice(0, 5));
+      setIdeaResults(ideas.filter((i) => 
+        matchesQuery(i.title, q) || 
+        matchesQuery(i.notes, q) || 
+        i.tags?.some(tag => tag.toLowerCase().includes(q))
+      ).slice(0, 5));
     };
 
     const timer = setTimeout(run, 200);
@@ -66,7 +81,7 @@ export function SearchOverlay() {
           <input
             className="form-input"
             autoFocus
-            placeholder="Gorev, proje veya fikir ara..."
+            placeholder="Görev, proje veya fikir ara..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -77,30 +92,41 @@ export function SearchOverlay() {
 
         {query.trim() && !hasResults && (
           <div className="empty-state">
-            <div className="empty-state-title">Sonuc bulunamadi</div>
+            <div className="empty-state-title">Sonuç bulunamadı</div>
           </div>
         )}
 
         {taskResults.length > 0 && (
           <div className="form-group">
-            <div className="form-label">Gorevler</div>
-            {taskResults.map((t) => (
-              <button
-                key={t.id}
-                className="card"
-                onClick={() => handleResultClick('tasks')}
-                style={{ textAlign: 'left', width: '100%' }}
-              >
-                <div className="card-body">
-                  <div className="card-title">{t.title}</div>
-                  {t.dueDate && (
-                    <div className="card-meta">
-                      <span className="card-due-badge">{formatDate(t.dueDate)}</span>
-                    </div>
-                  )}
-                </div>
-              </button>
-            ))}
+            <div className="form-label">Görevler</div>
+            {taskResults.map((t) => {
+              const relativeDate = t.dueDate ? getRelativeDateLabel(t.dueDate) : null;
+              return (
+                <button
+                  key={t.id}
+                  className="card"
+                  onClick={() => handleResultClick('tasks')}
+                  style={{ textAlign: 'left', width: '100%' }}
+                >
+                  <div className="card-body">
+                    <div className="card-title">{t.title}</div>
+                    {t.notes && <div className="card-meta" style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginTop: 4 }}>{t.notes}</div>}
+                    {relativeDate && (
+                      <div className="card-meta">
+                        <span className={`card-due-badge ${relativeDate.className}`}>{relativeDate.label}</span>
+                      </div>
+                    )}
+                    {t.tags && t.tags.length > 0 && (
+                      <div className="card-meta" style={{ marginTop: 4 }}>
+                        {t.tags.slice(0, 3).map((tag) => (
+                          <span key={tag} className="badge badge-neutral" style={{ fontSize: 'var(--font-size-xs)' }}>#{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -116,6 +142,7 @@ export function SearchOverlay() {
               >
                 <div className="card-body">
                   <div className="card-title">{p.name}</div>
+                  {p.description && <div className="card-meta" style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>{p.description}</div>}
                 </div>
               </button>
             ))}
@@ -134,6 +161,14 @@ export function SearchOverlay() {
               >
                 <div className="card-body">
                   <div className="card-title">{i.title}</div>
+                  {i.notes && <div className="card-meta" style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>{i.notes}</div>}
+                  {i.tags && i.tags.length > 0 && (
+                    <div className="card-meta" style={{ marginTop: 4 }}>
+                      {i.tags.slice(0, 3).map((tag) => (
+                        <span key={tag} className="badge badge-neutral" style={{ fontSize: 'var(--font-size-xs)' }}>#{tag}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </button>
             ))}
