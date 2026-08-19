@@ -79,9 +79,9 @@ export function TopBar() {
 
             <div className="form-group">
               <label className="form-label">Tema</label>
-              <div className="theme-switcher" role="radiogroup" aria-label="Tema secimi">
+              <div className="theme-switcher" role="radiogroup" aria-label="Tema seçimi">
                 {[
-                  { value: 'light', icon: <span style={{fontSize:16}}>☀️</span>, label: 'Acik' },
+                  { value: 'light', icon: <span style={{fontSize:16}}>☀️</span>, label: 'Açık' },
                   { value: 'dark', icon: <span style={{fontSize:16}}>🌙</span>, label: 'Koyu' },
                   { value: 'system', icon: <span style={{fontSize:16}}>💻</span>, label: 'Sistem' },
                 ].map((opt) => (
