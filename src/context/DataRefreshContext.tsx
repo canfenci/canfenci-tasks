@@ -19,6 +19,6 @@ export function DataRefreshProvider({ children }: { children: ReactNode }) {
 
 export function useDataRefresh() {
   const ctx = useContext(DataRefreshContext);
-  if (!ctx) throw new Error('useDataRefresh, DataRefreshProvider icinde kullanilmali');
+  if (!ctx) throw new Error('useDataRefresh, DataRefreshProvider içinde kullanılmalı');
   return ctx;
 }

@@ -20,6 +20,6 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
 
 export function useNavigation() {
   const ctx = useContext(NavigationContext);
-  if (!ctx) throw new Error('useNavigation, NavigationProvider icinde kullanilmali');
+  if (!ctx) throw new Error('useNavigation, NavigationProvider içinde kullanılmalı');
   return ctx;
 }

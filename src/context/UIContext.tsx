@@ -33,6 +33,6 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
 export function useUI() {
   const ctx = useContext(UIContext);
-  if (!ctx) throw new Error('useUI, UIProvider icinde kullanilmali');
+  if (!ctx) throw new Error('useUI, UIProvider içinde kullanılmalı');
   return ctx;
 }

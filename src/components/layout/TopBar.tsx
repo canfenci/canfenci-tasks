@@ -126,7 +126,7 @@ export function TopBar() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Uygulama Surumu</label>
+              <label className="form-label">Uygulama Sürümü</label>
               <div className="card-meta">{APP_CONFIG.version}</div>
             </div>
 

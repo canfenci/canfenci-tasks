@@ -6,6 +6,9 @@ const BASE = '/canfenci-tasks/';
 
 export default defineConfig({
   base: BASE,
+  css: {
+    postcss: {}
+  },
   plugins: [
     react(),
     VitePWA({
@@ -14,7 +17,7 @@ export default defineConfig({
       manifest: {
         name: 'Canfenci Tasks',
         short_name: 'Canfenci',
-        description: 'Gorev, proje ve fikir yonetimi icin mobil oncelikli PWA',
+        description: 'Görev, proje ve fikir yönetimi için mobil öncelikli PWA',
         theme_color: '#4f46e5',
         background_color: '#ffffff',
         display: 'standalone',

@@ -57,8 +57,8 @@ export default function App() {
         const updateSW = initPWA(() => setUpdateAvailable(true));
         setUpdateFn(() => () => updateSW(true));
       } catch (e) {
-        // vite-plugin-pwa yuklu degilse (ilk kurulumda) sessizce gec
-        console.warn('PWA kaydi atlandi:', e);
+        // vite-plugin-pwa yüklü değilse (ilk kurulumda) sessizce geç
+        console.warn('PWA kaydı atlandı:', e);
       }
     }
   }, []);

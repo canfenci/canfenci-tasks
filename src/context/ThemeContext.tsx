@@ -60,6 +60,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
 export function useTheme() {
   const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error('useTheme, ThemeProvider icinde kullanilmali');
+  if (!ctx) throw new Error('useTheme, ThemeProvider içinde kullanılmalı');
   return ctx;
 }

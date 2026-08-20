@@ -264,7 +264,7 @@ input, textarea, select {
 .badge-danger { background: var(--color-danger-light); color: var(--color-danger); }
 .badge-neutral { background: var(--color-bg-hover); color: var(--color-text-secondary); }
 
-/* ----- Ilerleme cubugu ----- */
+/* ----- İlerleme çubuğu ----- */
 .progress-bar-track {
   width: 100%;
   height: 6px;
@@ -301,7 +301,7 @@ input, textarea, select {
 .btn-block { width: 100%; }
 .btn:disabled { opacity: 0.5; pointer-events: none; }
 
-/* ----- Form elemanlari ----- */
+/* ----- Form elemanları ----- */
 .form-group { margin-bottom: var(--space-4); }
 
 .form-label {
@@ -354,7 +354,7 @@ input, textarea, select {
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-/* ----- Filtre / Tab cubugu ----- */
+/* ----- Filtre / Tab çubuğu ----- */
 .tab-bar {
   display: flex;
   gap: var(--space-2);
@@ -383,7 +383,7 @@ input, textarea, select {
   color: #fff;
 }
 
-/* ----- Bos durum ----- */
+/* ----- Boş durum ----- */
 .empty-state {
   display: flex;
   flex-direction: column;

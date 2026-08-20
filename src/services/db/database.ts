@@ -25,7 +25,7 @@ export function openDatabase(): Promise<IDBDatabase> {
       resolve(dbInstance);
     };
 
-    request.onerror = () => reject(new Error(`IndexedDB acilamadi: ${request.error?.message || 'Bilinmeyen hata'}`));
+    request.onerror = () => reject(new Error(`IndexedDB açılamadı: ${request.error?.message || 'Bilinmeyen hata'}`));
   });
 }
 
@@ -47,6 +47,6 @@ export function nowISO(): string {
 }
 
 export function handleDBError(error: unknown, operation: string): never {
-  const message = error instanceof Error ? error.message : 'Bilinmeyen veritabani hatasi';
-  throw new Error(`${operation} basarisiz: ${message}`);
+  const message = error instanceof Error ? error.message : 'Bilinmeyen veritabanı hatası';
+  throw new Error(`${operation} başarısız: ${message}`);
 }
