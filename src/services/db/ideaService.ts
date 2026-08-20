@@ -8,10 +8,10 @@ export const ideaService = {
       return new Promise((resolve, reject) => {
         const req = store.getAll();
         req.onsuccess = () => resolve(req.result as Idea[]);
-        req.onerror = () => reject(handleDBError(req.error, 'Fikirler yuklenemedi'));
+        req.onerror = () => reject(handleDBError(req.error, 'Fikirler yüklenemedi'));
       });
     } catch (e) {
-      handleDBError(e, 'Fikirler yuklenemedi');
+      handleDBError(e, 'Fikirler yüklenemedi');
     }
   },
 
@@ -27,10 +27,10 @@ export const ideaService = {
       return new Promise((resolve, reject) => {
         const req = store.add(idea);
         req.onsuccess = () => resolve(idea);
-        req.onerror = () => reject(handleDBError(req.error, 'Fikir olusturulamadi'));
+        req.onerror = () => reject(handleDBError(req.error, 'Fikir oluşturulamadı'));
       });
     } catch (e) {
-      handleDBError(e, 'Fikir olusturulamadi');
+      handleDBError(e, 'Fikir oluşturulamadı');
     }
   },
 
@@ -40,16 +40,16 @@ export const ideaService = {
       const existing = await new Promise<Idea>((resolve, reject) => {
         const req = store.get(id);
         req.onsuccess = () => resolve(req.result as Idea);
-        req.onerror = () => reject(handleDBError(req.error, 'Fikir yuklenemedi'));
+        req.onerror = () => reject(handleDBError(req.error, 'Fikir yüklenemedi'));
       });
       const updated: Idea = { ...existing, ...changes, updatedAt: nowISO() };
       return new Promise((resolve, reject) => {
         const req = store.put(updated);
         req.onsuccess = () => resolve();
-        req.onerror = () => reject(handleDBError(req.error, 'Fikir guncellenemedi'));
+        req.onerror = () => reject(handleDBError(req.error, 'Fikir güncellenemedi'));
       });
     } catch (e) {
-      handleDBError(e, 'Fikir guncellenemedi');
+      handleDBError(e, 'Fikir güncellenemedi');
     }
   },
 

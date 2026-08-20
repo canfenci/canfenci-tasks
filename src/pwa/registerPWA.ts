@@ -1,32 +1,32 @@
-// vite-plugin-pwa otomatik service worker uretir;
- // bu dosya guncelleme bildirimini yonetmek icin ince bir katman saglar.
- // NOT: 'virtual:pwa-register' sadece build (prod) asamasinda gercek modul olarak cozulur.
+// vite-plugin-pwa otomatik service worker üretir;
+// bu dosya güncelleme bildirimini yönetmek için ince bir katman sağlar.
+// NOT: 'virtual:pwa-register' sadece build (prod) aşamasında gerçek modül olarak çözülür.
 
- type UpdateSWFn = (reloadPage?: boolean) => Promise<void>;
+type UpdateSWFn = (reloadPage?: boolean) => Promise<void>;
 
- export function initPWA(onUpdateAvailable: () => void): UpdateSWFn {
-   // Dev ortaminda bu modul bulunmayabilir, bu yuzden dinamik import + fallback kullaniyoruz.
-   let updateFn: UpdateSWFn = async () => {};
+export function initPWA(onUpdateAvailable: () => void): UpdateSWFn {
+  // Dev ortamında bu modül bulunmayabilir, bu yüzden dinamik import + fallback kullanıyoruz.
+  let updateFn: UpdateSWFn = async () => {};
 
-   import('virtual:pwa-register')
-     .then(({ registerSW }) => {
-       updateFn = registerSW({
-         immediate: true,
-         onNeedRefresh() {
-           onUpdateAvailable();
-         },
-         onOfflineReady() {
-           if (import.meta.env.DEV) {
-             console.log('Canfenci Tasks cevrimdisi kullanima hazir.');
-           }
-         },
-       });
-     })
-     .catch(() => {
-       if (import.meta.env.DEV) {
-         console.warn('PWA register modulu yuklenemedi (dev ortaminda normal olabilir).');
-       }
-     });
+  import('virtual:pwa-register')
+    .then(({ registerSW }) => {
+      updateFn = registerSW({
+        immediate: true,
+        onNeedRefresh() {
+          onUpdateAvailable();
+        },
+        onOfflineReady() {
+          if (import.meta.env.DEV) {
+            console.log('Canfenci Tasks çevrimdışı kullanıma hazır.');
+          }
+        },
+      });
+    })
+    .catch(() => {
+      if (import.meta.env.DEV) {
+        console.warn('PWA register modülü yüklenemedi (dev ortamında normal olabilir).');
+      }
+    });
 
-   return (reloadPage?: boolean) => updateFn(reloadPage);
- }
+  return (reloadPage?: boolean) => updateFn(reloadPage);
+}

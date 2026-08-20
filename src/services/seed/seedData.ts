@@ -27,27 +27,27 @@ export async function seedInitialData(): Promise<void> {
 
     const project = await projectService.create({
       name: 'Canfenci Tasks Kurulumu',
-      description: 'Uygulamanin ilk kurulum ve tanitim gorevleri',
+      description: 'Uygulamanın ilk kurulum ve tanıtım görevleri',
       color: '#4f46e5',
     });
 
     await taskService.create({
-      title: 'Canfenci Tasks uygulamasina hos geldiniz!',
+      title: 'Canfenci Tasks uygulamasına hoş geldiniz!',
       priority: 'medium',
       projectId: project.id,
       order: 0,
     });
 
     await taskService.create({
-      title: 'Bir gorev olusturmayi deneyin (+ butonuna dokunun)',
+      title: 'Bir görev oluşturmayı deneyin (+ butonuna dokunun)',
       priority: 'low',
       projectId: project.id,
       order: 1,
     });
 
     await ideaService.create({
-      title: 'Uygulamayi ana ekrana ekle',
-      notes: 'Paylas menusunden Ana Ekrana Ekle secenegini kullanabilirsiniz (iOS).',
+      title: 'Uygulamayı ana ekrana ekle',
+      notes: 'Paylaş menüsünden Ana Ekrana Ekle seçeneğini kullanabilirsiniz (iOS).',
       tags: ['pwa', 'ipucu'],
     });
 

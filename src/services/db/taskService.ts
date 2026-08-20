@@ -8,10 +8,10 @@ export const taskService = {
       return new Promise((resolve, reject) => {
         const req = store.getAll();
         req.onsuccess = () => resolve(req.result as Task[]);
-        req.onerror = () => reject(handleDBError(req.error, 'Gorevler yuklenemedi'));
+        req.onerror = () => reject(handleDBError(req.error, 'Görevler yüklenemedi'));
       });
     } catch (e) {
-      handleDBError(e, 'Gorevler yuklenemedi');
+      handleDBError(e, 'Görevler yüklenemedi');
     }
   },
 
@@ -21,10 +21,10 @@ export const taskService = {
       return new Promise((resolve, reject) => {
         const req = store.get(id);
         req.onsuccess = () => resolve(req.result as Task | undefined);
-        req.onerror = () => reject(handleDBError(req.error, 'Gorev yuklenemedi'));
+        req.onerror = () => reject(handleDBError(req.error, 'Görev yüklenemedi'));
       });
     } catch (e) {
-      handleDBError(e, 'Gorev yuklenemedi');
+      handleDBError(e, 'Görev yüklenemedi');
     }
   },
 
@@ -41,10 +41,10 @@ export const taskService = {
       return new Promise((resolve, reject) => {
         const req = store.add(task);
         req.onsuccess = () => resolve(task);
-        req.onerror = () => reject(handleDBError(req.error, 'Gorev olusturulamadi'));
+        req.onerror = () => reject(handleDBError(req.error, 'Görev oluşturulamadı'));
       });
     } catch (e) {
-      handleDBError(e, 'Gorev olusturulamadi');
+      handleDBError(e, 'Görev oluşturulamadı');
     }
   },
 
@@ -54,16 +54,16 @@ export const taskService = {
       const existing = await new Promise<Task>((resolve, reject) => {
         const req = store.get(id);
         req.onsuccess = () => resolve(req.result as Task);
-        req.onerror = () => reject(handleDBError(req.error, 'Gorev yuklenemedi'));
+        req.onerror = () => reject(handleDBError(req.error, 'Görev yüklenemedi'));
       });
       const updated: Task = { ...existing, ...changes, updatedAt: nowISO() };
       return new Promise((resolve, reject) => {
         const req = store.put(updated);
         req.onsuccess = () => resolve();
-        req.onerror = () => reject(handleDBError(req.error, 'Gorev guncellenemedi'));
+        req.onerror = () => reject(handleDBError(req.error, 'Görev güncellenemedi'));
       });
     } catch (e) {
-      handleDBError(e, 'Gorev guncellenemedi');
+      handleDBError(e, 'Görev güncellenemedi');
     }
   },
 
@@ -73,7 +73,7 @@ export const taskService = {
       if (!task) return;
       await this.update(id, { completed: !task.completed });
     } catch (e) {
-      handleDBError(e, 'Gorev durumu guncellenemedi');
+      handleDBError(e, 'Görev durumu güncellenemedi');
     }
   },
 
@@ -83,10 +83,10 @@ export const taskService = {
       return new Promise((resolve, reject) => {
         const req = store.delete(id);
         req.onsuccess = () => resolve();
-        req.onerror = () => reject(handleDBError(req.error, 'Gorev silinemedi'));
+        req.onerror = () => reject(handleDBError(req.error, 'Görev silinemedi'));
       });
     } catch (e) {
-      handleDBError(e, 'Gorev silinemedi');
+      handleDBError(e, 'Görev silinemedi');
     }
   },
 };

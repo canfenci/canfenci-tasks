@@ -8,10 +8,10 @@ export const projectService = {
       return new Promise((resolve, reject) => {
         const req = store.getAll();
         req.onsuccess = () => resolve(req.result as Project[]);
-        req.onerror = () => reject(handleDBError(req.error, 'Projeler yuklenemedi'));
+        req.onerror = () => reject(handleDBError(req.error, 'Projeler yüklenemedi'));
       });
     } catch (e) {
-      handleDBError(e, 'Projeler yuklenemedi');
+      handleDBError(e, 'Projeler yüklenemedi');
     }
   },
 
@@ -21,10 +21,10 @@ export const projectService = {
       return new Promise((resolve, reject) => {
         const req = store.get(id);
         req.onsuccess = () => resolve(req.result as Project | undefined);
-        req.onerror = () => reject(handleDBError(req.error, 'Proje yuklenemedi'));
+        req.onerror = () => reject(handleDBError(req.error, 'Proje yüklenemedi'));
       });
     } catch (e) {
-      handleDBError(e, 'Proje yuklenemedi');
+      handleDBError(e, 'Proje yüklenemedi');
     }
   },
 
@@ -41,10 +41,10 @@ export const projectService = {
       return new Promise((resolve, reject) => {
         const req = store.add(project);
         req.onsuccess = () => resolve(project);
-        req.onerror = () => reject(handleDBError(req.error, 'Proje olusturulamadi'));
+        req.onerror = () => reject(handleDBError(req.error, 'Proje oluşturulamadı'));
       });
     } catch (e) {
-      handleDBError(e, 'Proje olusturulamadi');
+      handleDBError(e, 'Proje oluşturulamadı');
     }
   },
 
@@ -54,16 +54,16 @@ export const projectService = {
       const existing = await new Promise<Project>((resolve, reject) => {
         const req = store.get(id);
         req.onsuccess = () => resolve(req.result as Project);
-        req.onerror = () => reject(handleDBError(req.error, 'Proje yuklenemedi'));
+        req.onerror = () => reject(handleDBError(req.error, 'Proje yüklenemedi'));
       });
       const updated: Project = { ...existing, ...changes, updatedAt: nowISO() };
       return new Promise((resolve, reject) => {
         const req = store.put(updated);
         req.onsuccess = () => resolve();
-        req.onerror = () => reject(handleDBError(req.error, 'Proje guncellenemedi'));
+        req.onerror = () => reject(handleDBError(req.error, 'Proje güncellenemedi'));
       });
     } catch (e) {
-      handleDBError(e, 'Proje guncellenemedi');
+      handleDBError(e, 'Proje güncellenemedi');
     }
   },
 

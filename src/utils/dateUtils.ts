@@ -28,8 +28,8 @@ export function isOverdue(dateStr?: string): boolean {
 
 export function getDueDateLabel(dateStr?: string): { label: string; className: string } {
   if (!dateStr) return { label: '', className: '' };
-  if (isOverdue(dateStr)) return { label: 'Gecikmis', className: 'overdue' };
-  if (isToday(dateStr)) return { label: 'Bugun', className: 'today' };
+  if (isOverdue(dateStr)) return { label: 'Gecikmiş', className: 'overdue' };
+  if (isToday(dateStr)) return { label: 'Bugün', className: 'today' };
   return { label: formatDate(dateStr), className: '' };
 }
 
